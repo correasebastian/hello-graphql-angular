@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { request } from 'graphql-request';
 
 const BASE_URL = 'http://localhost:3100/graphql';
@@ -19,7 +19,7 @@ interface Course {
 }
 
 interface QueryResponse {
-  allStudents;
+  allStudents: Student[]
 }
 
 const AllStudentsQuery = `
@@ -37,16 +37,20 @@ const AllStudentsQuery = `
   selector: 'app-root',
   template: `
         <h1>{{title}}</h1>
-        <pre>{{students | json}}</pre>
+        <pre>{{(students | async) | json}}</pre>
     `,
   styles: []
 })
-export class AppComponent {
+export class AppComponent implements OnInit {
+  
   title = 'Students';
-  students: Student[];
+  students: Promise<Student[]>;
   constructor() {
-    request(BASE_URL, AllStudentsQuery).then(
-      (data: QueryResponse) => (this.students = data.allStudents)
-    );
   }
+
+  ngOnInit(): void {
+    this.students = request<QueryResponse>(BASE_URL, AllStudentsQuery)
+    .then(data => data.allStudents)
+  }
+
 }
